@@ -1,6 +1,6 @@
 # API-Gateway
 
-This repository holds the Go GinGonic API Gateway for the Motzklist project.
+This repository holds the Go [Gin-Gonic](https://gin-gonic.com) API Gateway for the Motzklist project.
 
 TODO: 
 - Fill up documentation.
