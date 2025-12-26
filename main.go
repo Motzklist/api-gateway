@@ -64,6 +64,8 @@ func main() {
 	http.HandleFunc("/api/grades", enableCORS(getGradesHandler))
 	http.HandleFunc("/api/classes", enableCORS(getClassesHandler))
 	http.HandleFunc("/api/equipment", enableCORS(getEquipmentListsHandler))
+	http.HandleFunc("/api/login", enableCORS(postLoginHandler))
+	http.HandleFunc("/api/cart", enableCORS(getPostCartHandler)
 
 	// Start the API Gateway server
 	port := "8080" // Changed port to string without colon for easier fmt use
@@ -185,4 +187,64 @@ func getEquipmentListsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("Successfully served /api/equipment request")
+}
+
+// =====NEW=====
+// adding handlers to login page & shopping cart
+func postLoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var credentials struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	for _, user := range MockUsers {
+		if user.Username == credentials.Username && user.Password == credentials.Password {
+			json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID})
+			return
+		}
+	}
+
+	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+}
+
+func getPostCartHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userid")
+	if userID == "" {
+		http.Error(w, "Missing userid", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// Return existing cart
+		cart, exists := MockCarts[userID]
+		if !exists {
+			cart = []Equipment{} // Return empty list if no cart exists
+		}
+		json.NewEncoder(w).Encode(cart)
+
+	case http.MethodPost, http.MethodPut:
+		// Update the cart
+		var newItems []Equipment
+		if err := json.NewDecoder(r.Body).Decode(&newItems); err != nil {
+			http.Error(w, "Invalid data", http.StatusBadRequest)
+			return
+		}
+		MockCarts[userID] = newItems
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Cart updated successfully")
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
