@@ -93,7 +93,7 @@ func getSchoolsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert to Json
 	if err := json.NewEncoder(w).Encode(schools); err != nil {
-		http.Error(w, "Failed to encode schools response", http.StatusInternalServerError)
+		JSONError(w, "Failed to encode schools response", http.StatusInternalServerError)
 		log.Printf("Error encoding response: %v", err)
 		return
 	}
@@ -108,7 +108,7 @@ func getGradesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Input Validation: Check if the required parameter is missing
 	if schoolID == "" {
-		http.Error(w, "Missing required query parameter: school_id", http.StatusBadRequest)
+		JSONError(w, "Missing required query parameter: school_id", http.StatusBadRequest)
 		return
 	}
 
@@ -123,7 +123,7 @@ func getGradesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert to Json
 	if err := json.NewEncoder(w).Encode(grades); err != nil {
-		http.Error(w, "Failed to encode grades response", http.StatusInternalServerError)
+		JSONError(w, "Failed to encode grades response", http.StatusInternalServerError)
 		log.Printf("Error encoding response: %v", err)
 		return
 	}
@@ -139,7 +139,7 @@ func getClassesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Input Validation: Check if any required parameter is missing
 	if schoolID == "" || gradeID == "" {
-		http.Error(w, "Missing required query parameters: school_id or grade_id", http.StatusBadRequest)
+		JSONError(w, "Missing required query parameter: school_id, grade_id", http.StatusBadRequest)
 		return
 	}
 
@@ -153,7 +153,7 @@ func getClassesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert to Json
 	if err := json.NewEncoder(w).Encode(classes); err != nil {
-		http.Error(w, "Failed to encode classes response", http.StatusInternalServerError)
+		JSONError(w, "Failed to encode classes response", http.StatusInternalServerError)
 		log.Printf("Error encoding response: %v", err)
 		return
 	}
@@ -171,7 +171,7 @@ func getEquipmentListsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Input Validation (unchanged)
 	if schoolID == "" || gradeID == "" || classID == "" {
-		http.Error(w, "Missing required query parameters: school_id, grade_id, or class_id", http.StatusBadRequest)
+		JSONError(w, "Missing required query parameters: school_id, grade_id, or class_id", http.StatusBadRequest)
 		return
 	}
 
@@ -188,7 +188,7 @@ func getEquipmentListsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Encode the structured response object
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode equipment response", http.StatusInternalServerError)
+		JSONError(w, "Failed to encode equipment response", http.StatusInternalServerError)
 		log.Printf("Error encoding response: %v", err)
 		return
 	}
@@ -199,7 +199,7 @@ func getEquipmentListsHandler(w http.ResponseWriter, r *http.Request) {
 // adding handlers to login page & shopping cart
 func postLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		JSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -209,7 +209,7 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		JSONError(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
@@ -226,7 +226,7 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) {
 func getPostCartHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("userid")
 	if userID == "" {
-		http.Error(w, "Missing userid", http.StatusBadRequest)
+		JSONError(w, "Missing required query parameter: userid", http.StatusBadRequest)
 		return
 	}
 
@@ -251,6 +251,6 @@ func getPostCartHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Cart updated successfully")
 
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		JSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
