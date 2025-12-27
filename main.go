@@ -197,6 +197,29 @@ func getEquipmentListsHandler(w http.ResponseWriter, r *http.Request) {
 
 // =====NEW=====
 // adding handlers to login page & shopping cart
+func authStatusHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("sessionid")
+	if err != nil {
+		JSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userID, exists := sessions[cookie.Value]
+	if !exists {
+		JSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	for _, user := range MockUsers {
+		if user.UserID == userID {
+			json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID, "username": user.Username})
+			return
+		}
+	}
+
+	JSONError(w, "Unauthorized", http.StatusUnauthorized)
+}
+
 func postLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		JSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
