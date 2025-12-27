@@ -50,7 +50,10 @@ type EquipmentListResponse struct {
 func JSONError(w http.ResponseWriter, err string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": err})
+	errEncode := json.NewEncoder(w).Encode(map[string]string{"error": err})
+	if errEncode != nil {
+		log.Printf("Failed to encode JSON error response: %v", errEncode)
+	}
 }
 
 // =====NEW=====
@@ -233,7 +236,10 @@ func authStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, user := range MockUsers {
 		if user.UserID == userID {
-			json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID, "username": user.Username})
+			err := json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID, "username": user.Username})
+			if err != nil {
+				log.Printf("Failed to encode auth status response: %v", err)
+			}
 			return
 		}
 	}
@@ -269,10 +275,13 @@ func postLoginHandler(w http.ResponseWriter, r *http.Request) {
 				Value:    sessionID,
 				Path:     "/",
 				HttpOnly: true,
-				//Secure:	true, // Uncomment this line if using HTTPS
+				//Secure: true, // Uncomment this line if using HTTPS
 				//SameSite: http.SameSiteStrictMode,
 			})
-			json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID, "username": user.Username})
+			err := json.NewEncoder(w).Encode(map[string]string{"userid": user.UserID, "username": user.Username})
+			if err != nil {
+				log.Printf("Failed to encode login response: %v", err)
+			}
 			return
 		}
 	}
@@ -309,7 +318,10 @@ func getPostCartHandler(w http.ResponseWriter, r *http.Request) {
 		if !exists {
 			cart = []CartEntry{} // Return empty list if no cart exists
 		}
-		json.NewEncoder(w).Encode(cart)
+		err := json.NewEncoder(w).Encode(cart)
+		if err != nil {
+			log.Printf("Failed to encode cart response: %v", err)
+		}
 
 	case http.MethodPost, http.MethodPut:
 		// Update the cart (expects []CartEntry)
@@ -320,7 +332,9 @@ func getPostCartHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		MockCarts[userID] = newEntries
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Cart updated successfully")
+		if _, err := fmt.Fprintf(w, "Cart updated successfully"); err != nil {
+			log.Printf("Failed to write cart update response: %v", err)
+		}
 
 	default:
 		JSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
